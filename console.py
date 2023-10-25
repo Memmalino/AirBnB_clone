@@ -4,6 +4,11 @@
 import cmd
 from models.base_model import BaseModel
 from models.user import User
+from models.state import State
+from models.review import Review
+from models.city import City
+from models.place import Place
+from models.amenity import Amenity
 from models import storage
 import re
 
@@ -17,14 +22,49 @@ class HBNBCommand(cmd.Cmd):
             "User",
             "State",
             "City",
-            "Place",
+            "Review",
             "Amenity",
-            "Review"
+            "Place"
             }
 
     def emptyline(self):
         """ Do nothing upon empty line and enter"""
         pass
+
+    def default(self, arg):
+        tmp = arg.split('.')
+        if len(tmp) == 1 or tmp[1] == '' or tmp[0] not in self.__classes:
+            print("*** Unknown syntax: {}".format(arg))
+            return
+        else:
+            mtd_name = re.match(r'^\w+', tmp[1]).group()
+            cnt = re.findall(r'\((.*?)\)', tmp[1])
+            if len(tmp) == 2:
+                if tmp[1] == "all()":
+                    self.do_all(tmp[0])
+                elif tmp[1] == "count()":
+                    i = 0
+                    for k, v in storage.all().items():
+                        if v.__class__.__name__ == tmp[0]:
+                            i += 1
+                    print(i)
+                elif mtd_name == "show":
+                    if len(cnt) > 0:
+                        arg_ = "{} {}".format(tmp[0], cnt[0].strip("'\""))
+                        self.do_show(arg_)
+                elif mtd_name == "destroy":
+                    if len(cnt) > 0:
+                        arg_ = "{} {}".format(tmp[0], cnt[0].strip("'\""))
+                        self.do_destroy(arg_)
+                elif mtd_name == "update":
+                    if len(cnt) > 0:
+                        t = cnt[0].split(",")
+                        a, b = [t[0].strip("'\""), t[1].strip("'\"")]
+                        arg_ = "{} {} {} {}".format(tmp[0], a, b, t[2].strip("'\""))
+                        self.do_update(arg_)
+
+            else:
+                 print("*** Unknown syntax: {}".format(arg))
 
     def do_quit(self, arg):
         """Quit command to exit the program"""
